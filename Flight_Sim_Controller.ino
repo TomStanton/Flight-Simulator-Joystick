@@ -17,7 +17,7 @@ Joystick_ Joystick;
 int JoystickX;
 int JoystickY;
 int JoystickZ;
-unsigned int Throttle;
+int Throttle;
 
 boolean lastButtonState0;
 boolean lastButtonState1;
