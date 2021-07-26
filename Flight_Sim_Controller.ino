@@ -6,40 +6,33 @@ int bitResolution = 12;
 unsigned long sampleValue = 0; 
 unsigned int numberOfSamples = 1;
 
-int JoystickX;
-int JoystickY;
-int JoystickZ;
-int Throttle;
+const uint8_t LINEAR_PINS[] = {
+  A9, // JoystickX, Hall effect
+  A8, // JoystickY, Hall effect
+  A6, // JoystickZ, Hall effect
+  A4, // Throttle,  Potentiometer
+};
+const uint8_t SWITCH_PINS[] = {
+  7,  // Joystick Button 0
+  A0, // Joystick Button 1
+  6,  // Joystick Button 2
+  A1, // Joystick Button 3
+  A2, // Joystick Button 4
+  A3, // Joystick Button 5
+  A5, // Joystick Button 6
+};
 
-int currentButtonState0;
-int lastButtonState0;
-int currentButtonState1;
-int lastButtonState1;
-int currentButtonState2;
-int lastButtonState2;
-int currentButtonState3;
-int lastButtonState3;
-int currentButtonState4;
-int lastButtonState4;
-int currentButtonState5;
-int lastButtonState5;
-int currentButtonState6;
-int lastButtonState6;
+int lastButtonState[sizeof(SWITCH_PINS)];
 
 void setup() {
-  pinMode(6 , INPUT_PULLUP);
-  pinMode(7 , INPUT_PULLUP);
-  pinMode(A0, INPUT_PULLUP);
-  pinMode(A1, INPUT_PULLUP);
-  pinMode(A2, INPUT_PULLUP);
-  pinMode(A3, INPUT_PULLUP);
-  pinMode(A4, INPUT_PULLUP);
-  pinMode(A5, INPUT_PULLUP);
-  pinMode(A6, INPUT_PULLUP);
-  pinMode(A7, INPUT_PULLUP);
-  pinMode(A8, INPUT_PULLUP); 
-  pinMode(A9, INPUT_PULLUP);
-  
+  // Setup analog inputs
+  for (size_t i = 0; i < sizeof(LINEAR_PINS); i++) {
+    pinMode(LINEAR_PINS[i], INPUT_PULLUP);
+  }
+  // Setup digital switches
+  for (size_t i = 0; i < sizeof(SWITCH_PINS); i++) {
+    pinMode(SWITCH_PINS[i], INPUT_PULLUP);
+  }
 
 // Initialize Joystick Library
   Joystick.begin();
@@ -53,73 +46,20 @@ void setup() {
 }
 
 void loop() {
-
-// Read Joystick
-  JoystickX = overSample(A9); // Hall effect sensor connects to this analog pin
-  JoystickY = overSample(A8); // Hall effect sensor connects to this analog pin
-
-// Read Rudder Pedals
-  JoystickZ = overSample(A6); // Hall effect sensor connects to this analog pin
-
-// Read Throttle
-  Throttle = overSample(A4); // Potentiometer signal connects to this analog pin
-
-
 // Read Switches
-int currentButtonState0 = !digitalRead(7); // Button 0
-  if (currentButtonState0 != lastButtonState0)
-  {
-  Joystick.setButton(0, currentButtonState0);
-  lastButtonState0 = currentButtonState0;
+  for (size_t i = 0; i < sizeof(SWITCH_PINS); i++) {
+    int currentButtonState = !digitalRead(SWITCH_PINS[i]);
+    if (currentButtonState != lastButtonState[i]) {
+      Joystick.setButton(i, currentButtonState);
+      lastButtonState[i] = currentButtonState;
+    }
   }
 
-int currentButtonState1 = !digitalRead(A0); // Button 1
-  if (currentButtonState1 != lastButtonState1)
-  {
-  Joystick.setButton(1, currentButtonState1);
-  lastButtonState1 = currentButtonState1;
-  }
-  
-int currentButtonState2 = !digitalRead(6); // Button 2
-  if (currentButtonState2 != lastButtonState2)
-  {
-  Joystick.setButton(2, currentButtonState2);
-  lastButtonState2 = currentButtonState2;
-  }
-
-int currentButtonState3 = !digitalRead(A1); // Button 3
-  if (currentButtonState3 != lastButtonState3)
-  {
-  Joystick.setButton(3, currentButtonState3);
-  lastButtonState3 = currentButtonState3;
-  }
-  
-int currentButtonState4 = !digitalRead(A2); // Button 4
-  if (currentButtonState4 != lastButtonState4)
-  {
-  Joystick.setButton(4, currentButtonState4);
-  lastButtonState4 = currentButtonState4;
-  } 
-
-int currentButtonState5 = !digitalRead(A3); // Button 5
-  if (currentButtonState5 != lastButtonState5)
-  {
-  Joystick.setButton(5, currentButtonState5);
-  lastButtonState5 = currentButtonState5;
-  } 
-  
-int currentButtonState6 = !digitalRead(A5); // Button 6
-  if (currentButtonState6 != lastButtonState6)
-  {
-  Joystick.setButton(6, currentButtonState6);
-  lastButtonState6 = currentButtonState6;
-  }  
-   
 // Output Controls
-  Joystick.setXAxis(JoystickX);
-  Joystick.setYAxis(JoystickY);
-  Joystick.setZAxis(JoystickZ);
-  Joystick.setThrottle(Throttle);
+  Joystick.setXAxis(overSample(LINEAR_PINS[0]));    // Hall effect sensor connects to this analog pin
+  Joystick.setYAxis(overSample(LINEAR_PINS[1]));    // Hall effect sensor connects to this analog pin
+  Joystick.setZAxis(overSample(LINEAR_PINS[2]));    // Hall effect sensor connects to this analog pin
+  Joystick.setThrottle(overSample(LINEAR_PINS[3])); // Potentiometer signal connects to this analog pin
 
   Joystick.sendState();
 
