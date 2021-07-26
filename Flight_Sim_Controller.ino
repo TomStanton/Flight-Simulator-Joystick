@@ -1,7 +1,11 @@
 // Requires Arduino Joystick Library https://github.com/MHeironimus/ArduinoJoystickLibrary
 #include <Joystick.h>
 Joystick_ Joystick;
- 
+
+int bitResolution = 12;
+unsigned long sampleValue = 0; 
+unsigned int numberOfSamples = 1;
+
 int JoystickX;
 int JoystickY;
 int JoystickZ;
@@ -23,8 +27,8 @@ int currentButtonState6;
 int lastButtonState6;
 
 void setup() {
-  pinMode(6, INPUT_PULLUP);
-  pinMode(7, INPUT_PULLUP);
+  pinMode(6 , INPUT_PULLUP);
+  pinMode(7 , INPUT_PULLUP);
   pinMode(A0, INPUT_PULLUP);
   pinMode(A1, INPUT_PULLUP);
   pinMode(A2, INPUT_PULLUP);
@@ -39,23 +43,26 @@ void setup() {
 
 // Initialize Joystick Library
   Joystick.begin();
-  Joystick.setXAxisRange(0, 1024); 
-  Joystick.setYAxisRange(0, 1024);
-  Joystick.setZAxisRange(0, 1024);
-  Joystick.setThrottleRange(0, 1024);
+  Joystick.setXAxisRange(0, 1<<bitResolution); 
+  Joystick.setYAxisRange(0, 1<<bitResolution));
+  Joystick.setZAxisRange(0, 1<<bitResolution));
+  Joystick.setThrottleRange(0, 1<<bitResolution));
+
+// Calculate number of samples
+  numberOfSamples = (bitResolution-10)<1 ? 1 : 1<<((bitResolution-10)<<1);
 }
 
 void loop() {
 
 // Read Joystick
-  JoystickX = analogRead(A9); // Hall effect sensor connects to this analog pin
-  JoystickY = analogRead(A8); // Hall effect sensor connects to this analog pin
+  JoystickX = overSample(A9); // Hall effect sensor connects to this analog pin
+  JoystickY = overSample(A8); // Hall effect sensor connects to this analog pin
 
 // Read Rudder Pedals
-  JoystickZ = analogRead(A6); // Hall effect sensor connects to this analog pin
+  JoystickZ = overSample(A6); // Hall effect sensor connects to this analog pin
 
 // Read Throttle
-  Throttle = analogRead(A4); // Potentiometer signal connects to this analog pin
+  Throttle = overSample(A4); // Potentiometer signal connects to this analog pin
 
 
 // Read Switches
@@ -117,3 +124,12 @@ int currentButtonState6 = !digitalRead(A5); // Button 6
   Joystick.sendState();
 
 } 
+
+int overSample(int analogPin)
+{
+  sampleValue = analogRead(analogPin);
+  for(int n=1 ; n<numberOfSamples ; n++){
+    sampleValue += analogRead(analogPin);
+  }
+  return ( (int) ((sampleValue>>(bitResolution-10))+(1<<bitResolution-11)-1) );
+}
