@@ -3,8 +3,8 @@
 Joystick_ Joystick;
 
 int bitResolution = 12;
-unsigned long sampleValue = 0; 
-unsigned int numberOfSamples = 1;
+long sampleValue = 0; 
+int numberOfSamples = 1;
 
 const uint8_t LINEAR_PINS[] = {
   A9, // JoystickX, Hall effect
@@ -22,7 +22,7 @@ const uint8_t SWITCH_PINS[] = {
   A5, // Joystick Button 6
 };
 
-int lastButtonState[sizeof(SWITCH_PINS)];
+boolean lastButtonState[sizeof(SWITCH_PINS)];
 
 void setup() {
   // Setup analog inputs
